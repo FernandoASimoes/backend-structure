@@ -1,0 +1,142 @@
+openapi: 3.0.3
+info:
+  title: API do Meu Projeto
+  version: 1.0.0
+  description: API para autenticação, perfil e rota protegida por client JWT
+
+servers:
+  - url: http://localhost:3000
+    description: Servidor local
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - nome
+        - email
+        - password
+      properties:
+        nome:
+          type: string
+          example: "Fernando Simões"
+        email:
+          type: string
+          format: email
+          example: "fernando@example.com"
+        password:
+          type: string
+          format: password
+          example: "minhaSenha123"
+
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          format: email
+          example: "fernando@example.com"
+        password:
+          type: string
+          format: password
+          example: "minhaSenha123"
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nome:
+          type: string
+          example: "Fernando Simões"
+        email:
+          type: string
+          format: email
+          example: "fernando@example.com"
+
+paths:
+  /api/register:
+    post:
+      summary: Registrar novo usuário
+      requestBody:
+        description: Dados para registro
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Usuário criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Erro na requisição
+
+  /api/login:
+    post:
+      summary: Login de usuário
+      requestBody:
+        description: Dados para login
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login realizado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Credenciais inválidas
+
+  /api/profile:
+    get:
+      summary: Obter dados do perfil do usuário logado
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dados do usuário autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Não autenticado
+
+  /rota-protegida:
+    get:
+      summary: Rota protegida pelo passportClient (client-auth)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Acesso autorizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: "Acesso autorizado
+          description: Acesso negado
